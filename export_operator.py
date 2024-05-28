@@ -92,18 +92,21 @@ class QuickAnimationExporter(bpy.types.Operator):
 def menu_func(self, context):
     self.layout.operator(QuickAnimationExporter.bl_idname, text=QuickAnimationExporter.bl_label)
 
+classes = (
+    UIActionList,
+    ActionSelectionProperty,
+    QuickAnimationExporterProperties,
+    QuickAnimationExporter,
+)
+
 def register():
-    bpy.utils.register_class(UIActionList)
-    bpy.utils.register_class(ActionSelectionProperty)
-    bpy.utils.register_class(QuickAnimationExporterProperties)
-    bpy.utils.register_class(QuickAnimationExporter)
+    for c in classes:
+        bpy.utils.register_class(c)
     bpy.types.TOPBAR_MT_file_export.append(menu_func)
     bpy.types.WindowManager.quick_animation_exporter = bpy.props.PointerProperty(type=QuickAnimationExporterProperties)
 
 def unregister():
-    bpy.utils.unregister_class(UIActionList)
-    bpy.utils.unregister_class(ActionSelectionProperty)
-    bpy.utils.unregister_class(QuickAnimationExporterProperties)
-    bpy.utils.unregister_class(QuickAnimationExporter)
+    for c in classes:
+        bpy.utils.unregister_class(c)
     bpy.types.TOPBAR_MT_file_export.remove(menu_func)
     del bpy.types.WindowManager.quick_animation_exporter
