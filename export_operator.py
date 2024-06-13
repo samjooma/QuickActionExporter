@@ -39,10 +39,12 @@ class QuickAnimationExporter(bpy.types.Operator):
             export_path = f"{directory_path}\\{action.name}.fbx"
 
             for rig_object in (x for x in context.selected_objects if x.type == "ARMATURE"):
-                rig_object.animation_data_clear()
-                rig_object.animation_data_create()
+                if rig_object.animation_data == None:
+                    rig_object.animation_data_create()
+                old_animation_data_action = rig_object.animation_data.action
+                
+                # Change action and export it.
                 rig_object.animation_data.action = action
-
                 bpy.ops.export_scene.fbx(
                     filepath=export_path,
                     use_selection=True,
@@ -54,6 +56,8 @@ class QuickAnimationExporter(bpy.types.Operator):
                     bake_anim_use_nla_strips=False,
                     bake_anim_use_all_actions=False,
                 )
+                # Switch back to old action.
+                rig_object.animation_data.action = old_animation_data_action
         return {"FINISHED"}
     
     def invoke(self, context, event):
