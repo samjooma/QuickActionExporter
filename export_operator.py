@@ -26,22 +26,24 @@ class QuickAnimationExporter(bpy.types.Operator):
     @classmethod
     def poll(self, context):
         if len(bpy.data.actions) < 1: return False
+        if len(context.selected_objects) != 1: return False
         if not any((x.type == "ARMATURE" for x in context.selected_objects)): return False
         return True
 
     def execute(self, context):
         properties = bpy.context.window_manager.quick_animation_exporter
-        for action in (bpy.data.actions[x.name] for x in properties.actions if x.include_in_export):
-            context.scene.frame_start = round(action.curve_frame_range[0])
-            context.scene.frame_end = round(action.curve_frame_range[1])
 
-            directory_path = os.path.dirname(bpy.data.filepath)
-            export_path = f"{directory_path}\\{action.name}.fbx"
+        for rig_object in (x for x in context.selected_objects if x.type == "ARMATURE"):
+            if rig_object.animation_data == None:
+                rig_object.animation_data_create()
+            old_animation_data_action = rig_object.animation_data.action
 
-            for rig_object in (x for x in context.selected_objects if x.type == "ARMATURE"):
-                if rig_object.animation_data == None:
-                    rig_object.animation_data_create()
-                old_animation_data_action = rig_object.animation_data.action
+            for action in (bpy.data.actions[x.name] for x in properties.actions if x.include_in_export):
+                context.scene.frame_start = round(action.curve_frame_range[0])
+                context.scene.frame_end = round(action.curve_frame_range[1])
+
+                directory_path = os.path.dirname(bpy.data.filepath)
+                export_path = f"{directory_path}\\{action.name}.fbx"
                 
                 # Change action and export it.
                 rig_object.animation_data.action = action
@@ -56,8 +58,10 @@ class QuickAnimationExporter(bpy.types.Operator):
                     bake_anim_use_nla_strips=False,
                     bake_anim_use_all_actions=False,
                 )
-                # Switch back to old action.
-                rig_object.animation_data.action = old_animation_data_action
+            
+            # Switch back to old action.
+            rig_object.animation_data.action = old_animation_data_action
+                    
         return {"FINISHED"}
     
     def invoke(self, context, event):
