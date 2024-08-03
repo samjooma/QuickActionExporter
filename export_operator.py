@@ -1,7 +1,7 @@
 import bpy
 import os
 
-class UIActionList(bpy.types.UIList):
+class QUICK_ANIMATION_EXPORTER_UL_Action(bpy.types.UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
         if self.layout_type in {"DEFAULT", "COMPACT", "GRID"}:
             row = layout.row(align=True)
@@ -89,7 +89,7 @@ class QuickAnimationExporter(bpy.types.Operator):
         layout = self.layout
         properties = bpy.context.window_manager.quick_animation_exporter
         layout.template_list(
-            listtype_name="UIActionList",
+            listtype_name="QUICK_ANIMATION_EXPORTER_UL_Action",
             list_id="",
             dataptr=properties,
             propname="actions",
@@ -102,7 +102,7 @@ def menu_func(self, context):
     self.layout.operator(QuickAnimationExporter.bl_idname, text=QuickAnimationExporter.bl_label)
 
 classes = (
-    UIActionList,
+    QUICK_ANIMATION_EXPORTER_UL_Action,
     ActionSelectionProperty,
     QuickAnimationExporterProperties,
     QuickAnimationExporter,
