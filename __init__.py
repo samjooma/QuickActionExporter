@@ -1,6 +1,6 @@
 bl_info = {
-    "name": "Quick Animation Exporter",
-    "description": "Quickly choose animations to export for selected rig",
+    "name": "Quick Action Export",
+    "description": "Quickly export actions to FBX files",
     "author": "Samjooma",
     "version": (1, 0, 0),
     "blender": (4, 1, 0),
@@ -8,13 +8,13 @@ bl_info = {
 }
 
 import bpy
-from . import export_operator
+from . import export_actions_operator
 
 def register():
-    export_operator.register()
+    export_actions_operator.register()
 
 def unregister():
-    export_operator.unregister()
+    export_actions_operator.unregister()
 
 if __name__ == "__main__":
     register()
