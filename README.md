@@ -1,1 +1,1 @@
-Blender plugin that makes is quicker and easier to export animations in FBX format.
+Blender plugin that makes is quicker and easier to export actions in FBX format.
