@@ -14,7 +14,7 @@ class ActionSelectionProperty(bpy.types.PropertyGroup):
     include_in_export: bpy.props.BoolProperty(default=False)
 
 class QuickActionExportOperator(bpy.types.Operator):
-    bl_idname = "export_actions_quick.export"
+    bl_idname = "quick_action_exporter.export"
     bl_label = "Quick action export"
     bl_description = "Export selected actions to FBX files"
     bl_options = {"REGISTER"}
@@ -26,7 +26,7 @@ class QuickActionExportOperator(bpy.types.Operator):
     )
 
     @classmethod
-    def poll(self, context):
+    def poll(cls, context):
         if len(bpy.data.actions) < 1:
             return False
         selected_armatures = [x for x in context.selected_objects if x.type == "ARMATURE"]
@@ -45,16 +45,16 @@ class QuickActionExportOperator(bpy.types.Operator):
                 armature.animation_data_create()
             old_actions[armature] = armature.animation_data.action
 
-        for selected_object in selected_armatures:
+        for selected_armature in selected_armatures:
             for action in (bpy.data.actions[x.name] for x in self.action_selections if x.include_in_export):
                 # Set all armatures to use this action.
                 for armature in (x for x in context.scene.objects if x.type == "ARMATURE"):
                     armature.animation_data.action = action
 
                 # Export.
-                name_prefix = f"{self.name_prefix}_" if self.name_prefix != "" else f"{selected_object.name}_"
+                name_prefix = f"{self.name_prefix}_" if self.name_prefix != "" else ""
                 context_override = context.copy()
-                context_override["selected_objects"] = [selected_object]
+                context_override["selected_objects"] = [selected_armature]
                 with context.temp_override(**context_override):
                     context.scene.frame_start = round(action.curve_frame_range[0])
                     context.scene.frame_end = round(action.curve_frame_range[1])
