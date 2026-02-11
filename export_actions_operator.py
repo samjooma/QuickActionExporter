@@ -1,17 +1,22 @@
 import bpy
 import os
 
+
 class QUICK_ACTION_EXPORT_UL_action_selection(bpy.types.UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname):
+    def draw_item(
+        self, context, layout, data, item, icon, active_data, active_propname
+    ):
         if self.layout_type in {"DEFAULT", "COMPACT", "GRID"}:
             row = layout.row(align=True)
             row.alignment = "LEFT"
             row.prop(data=item, property="include_in_export", icon_only=True)
             row.label(text=item.name, icon_value=icon)
 
+
 class ActionSelectionProperty(bpy.types.PropertyGroup):
     name: bpy.props.StringProperty()
     include_in_export: bpy.props.BoolProperty(default=False)
+
 
 class QuickActionExportOperator(bpy.types.Operator):
     bl_idname = "quick_action_exporter.export"
@@ -22,20 +27,26 @@ class QuickActionExportOperator(bpy.types.Operator):
     action_selections: bpy.props.CollectionProperty(type=ActionSelectionProperty)
     active_index: bpy.props.IntProperty()
     name_prefix: bpy.props.StringProperty(
-        default="", name="Name prefix", description="Prefix to add before the action name in the file name. Leave this empty to use the name of the selected object"
+        default="",
+        name="Name prefix",
+        description="Prefix to add before the action name in the file name. Leave this empty to use the name of the selected object",
     )
 
     @classmethod
     def poll(cls, context):
         if len(bpy.data.actions) < 1:
             return False
-        selected_armatures = [x for x in context.selected_objects if x.type == "ARMATURE"]
+        selected_armatures = [
+            x for x in context.selected_objects if x.type == "ARMATURE"
+        ]
         if len(selected_armatures) < 1:
             return False
         return True
 
     def execute(self, context):
-        selected_armatures = [x for x in context.selected_objects if x.type == "ARMATURE"]
+        selected_armatures = [
+            x for x in context.selected_objects if x.type == "ARMATURE"
+        ]
         all_armatures = [x for x in context.scene.objects if x.type == "ARMATURE"]
 
         # Store current actions.
@@ -46,9 +57,15 @@ class QuickActionExportOperator(bpy.types.Operator):
             old_actions[armature] = armature.animation_data.action
 
         for selected_armature in selected_armatures:
-            for action in (bpy.data.actions[x.name] for x in self.action_selections if x.include_in_export):
+            for action in (
+                bpy.data.actions[x.name]
+                for x in self.action_selections
+                if x.include_in_export
+            ):
                 # Set all armatures to use this action.
-                for armature in (x for x in context.scene.objects if x.type == "ARMATURE"):
+                for armature in (
+                    x for x in context.scene.objects if x.type == "ARMATURE"
+                ):
                     armature.animation_data.action = action
 
                 # Export.
@@ -86,7 +103,11 @@ class QuickActionExportOperator(bpy.types.Operator):
         valid_action_names = [x.name for x in bpy.data.actions if x.users > 0]
 
         # Remove invalid action properties.
-        for action_property in (x for x in reversed(self.action_selections) if x.name not in valid_action_names):
+        for action_property in (
+            x
+            for x in reversed(self.action_selections)
+            if x.name not in valid_action_names
+        ):
             self.action_selections.remove(action_property)
 
         # Add missing action properties.
@@ -111,8 +132,12 @@ class QuickActionExportOperator(bpy.types.Operator):
         )
         layout.prop(data=self, property="name_prefix")
 
+
 def menu_func(self, context):
-    self.layout.operator(QuickActionExportOperator.bl_idname, text=QuickActionExportOperator.bl_label)
+    self.layout.operator(
+        QuickActionExportOperator.bl_idname, text=QuickActionExportOperator.bl_label
+    )
+
 
 classes = (
     QUICK_ACTION_EXPORT_UL_action_selection,
@@ -120,10 +145,12 @@ classes = (
     QuickActionExportOperator,
 )
 
+
 def register():
     for c in classes:
         bpy.utils.register_class(c)
     bpy.types.TOPBAR_MT_file_export.append(menu_func)
+
 
 def unregister():
     for c in classes:
