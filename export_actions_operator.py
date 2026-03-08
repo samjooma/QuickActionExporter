@@ -1,6 +1,6 @@
 import bpy
 import os
-
+import math
 
 class QUICK_ACTION_EXPORT_UL_action_selection(bpy.types.UIList):
     def draw_item(
@@ -36,45 +36,49 @@ class QuickActionExportOperator(bpy.types.Operator):
     def poll(cls, context):
         if len(bpy.data.actions) < 1:
             return False
-        selected_armatures = [
+        armatures_to_export = [
             x for x in context.selected_objects if x.type == "ARMATURE"
         ]
-        if len(selected_armatures) < 1:
+        if len(armatures_to_export) < 1:
             return False
         return True
 
     def execute(self, context):
-        selected_armatures = [
+        bpy.ops.object.mode_set(mode="OBJECT")
+
+        armatures_to_export = [
             x for x in context.selected_objects if x.type == "ARMATURE"
         ]
-        all_armatures = [x for x in context.scene.objects if x.type == "ARMATURE"]
+        original_armatures = [x for x in bpy.data.objects if x.type == "ARMATURE"]
 
         # Store current actions.
         old_actions = {}
-        for armature in all_armatures:
+        for armature in original_armatures:
             if armature.animation_data is None:
                 armature.animation_data_create()
             old_actions[armature] = armature.animation_data.action
 
-        for selected_armature in selected_armatures:
+        for armature in armatures_to_export:
             for action in (
                 bpy.data.actions[x.name]
                 for x in self.action_selections
                 if x.include_in_export
             ):
                 # Set all armatures to use this action.
-                for armature in (
-                    x for x in context.scene.objects if x.type == "ARMATURE"
-                ):
-                    armature.animation_data.action = action
+                for x in (o for o in bpy.data.objects if o.type == "ARMATURE"):
+                    if x.animation_data == None:
+                        x.animation_data_create()
+                    x.animation_data.action = action
+
+                name_prefix = f"{self.name_prefix}_" if self.name_prefix != "" else ""
+                frame_range = (math.floor(action.curve_frame_range[0]), math.ceil(action.curve_frame_range[1]))
 
                 # Export.
-                name_prefix = f"{self.name_prefix}_" if self.name_prefix != "" else ""
                 context_override = context.copy()
-                context_override["selected_objects"] = [selected_armature]
+                context_override["selected_objects"] = [armature]
                 with context.temp_override(**context_override):
-                    context.scene.frame_start = round(action.curve_frame_range[0])
-                    context.scene.frame_end = round(action.curve_frame_range[1])
+                    context.scene.frame_start = frame_range[0]
+                    context.scene.frame_end = frame_range[1]
                     directory_path = os.path.dirname(bpy.data.filepath)
                     export_path = f"{directory_path}\\{name_prefix}{action.name}.fbx"
                     bpy.ops.export_scene.fbx(
@@ -91,7 +95,7 @@ class QuickActionExportOperator(bpy.types.Operator):
 
         # Restore back to old actions.
         old_actions = {}
-        for armature_object in all_armatures:
+        for armature_object in original_armatures:
             try:
                 armature_object.animation_data.action = old_actions[armature_object]
             except KeyError:
